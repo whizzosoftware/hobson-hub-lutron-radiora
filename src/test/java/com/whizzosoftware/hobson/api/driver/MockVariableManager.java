@@ -10,7 +10,7 @@ package com.whizzosoftware.hobson.api.driver;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
-import com.whizzosoftware.hobson.api.variable.manager.VariableManager;
+import com.whizzosoftware.hobson.api.variable.VariableManager;
 
 import java.util.ArrayList;
 import java.util.Collection;

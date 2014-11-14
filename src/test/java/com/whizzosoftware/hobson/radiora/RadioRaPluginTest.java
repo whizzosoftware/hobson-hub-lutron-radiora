@@ -7,7 +7,7 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
-import com.whizzosoftware.hobson.api.device.manager.MockDeviceManager;
+import com.whizzosoftware.hobson.api.device.MockDeviceManager;
 import com.whizzosoftware.hobson.api.driver.MockVariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;

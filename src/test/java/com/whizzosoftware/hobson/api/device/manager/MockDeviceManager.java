@@ -1,5 +1,6 @@
 package com.whizzosoftware.hobson.api.device.manager;
 
+import com.whizzosoftware.hobson.api.device.DeviceManager;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.HobsonPlugin;
 
