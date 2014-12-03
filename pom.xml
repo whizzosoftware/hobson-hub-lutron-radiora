@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-lutron-radiora</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Lutron RadioRa Classic Plugin</name>
     <description>Provides the ability to control Lutron RadioRA Classic lighting systems.</description>
@@ -154,7 +154,7 @@
     <scm>
         <connection>scm:git:ssh://git@github.com/whizzosoftware/hobson-hub-lutron-radiora.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/whizzosoftware/hobson-hub-lutron-radiora.git</developerConnection>
-        <tag>hobson-hub-lutron-radiora-0.1.2</tag>
+        <tag>HEAD</tag>
     </scm>
     <repositories>
         <repository>
