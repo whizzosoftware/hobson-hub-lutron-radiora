@@ -193,6 +193,6 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     @Override
     public void onSetDeviceVariable(String deviceId, String variableName, Object value) {
-        getDevice(deviceId).onSetVariable(variableName, value);
+        getDevice(deviceId).getRuntime().onSetVariable(variableName, value);
     }
 }

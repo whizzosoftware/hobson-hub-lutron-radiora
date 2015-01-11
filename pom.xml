@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.whizzosoftware.hobson.hub</groupId>
     <artifactId>hobson-hub-lutron-radiora</artifactId>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>Lutron RadioRa Classic Plugin</name>
     <description>Provides the ability to control Lutron RadioRA Classic lighting systems.</description>
@@ -76,7 +76,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api</artifactId>
-            <version>0.1.8</version>
+            <version>0.3.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>com.whizzosoftware.hobson.hub</groupId>
             <artifactId>hobson-hub-api-mock</artifactId>
-            <version>0.1.8</version>
+            <version>0.3.0</version>
         </dependency>
     </dependencies>
     <build>
