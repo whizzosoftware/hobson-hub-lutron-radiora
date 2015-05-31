@@ -8,6 +8,7 @@
 package com.whizzosoftware.hobson.radiora;
 
 import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
+import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.channel.AbstractChannelObjectPlugin;
 import com.whizzosoftware.hobson.api.plugin.channel.ChannelIdleDetectionConfig;
@@ -118,7 +119,13 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
         List<VariableUpdate> updates = new ArrayList<>();
         for (HobsonDevice device : devices.values()) {
-            updates.add(new VariableUpdate(getId(), device.getId(), VariableConstants.ON, null));
+            updates.add(
+                new VariableUpdate(
+                    device.getContext(),
+                    VariableConstants.ON,
+                    null
+                )
+            );
         }
 
         fireVariableUpdateNotifications(updates);
@@ -127,10 +134,12 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     protected void onLocalZoneChange(LocalZoneChange lzc) {
         logger.debug("onLocalZoneChange: {}", lzc);
         VariableUpdate update = new VariableUpdate(
-                getId(),
-                Integer.toString(lzc.getZoneNumber()),
-                VariableConstants.ON,
-                lzc.getState() != LocalZoneChange.State.OFF
+            DeviceContext.create(
+                    getContext(),
+                    Integer.toString(lzc.getZoneNumber())
+            ),
+            VariableConstants.ON,
+            lzc.getState() != LocalZoneChange.State.OFF
         );
         fireVariableUpdateNotification(update);
     }
@@ -153,7 +162,16 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                         publishDevice(device);
                         devices.put(zoneId, device);
                     }
-                    updates.add(new VariableUpdate(getId(), Integer.toString(zoneId), VariableConstants.ON, c == '1'));
+                    updates.add(
+                        new VariableUpdate(
+                            DeviceContext.create(
+                                getContext(),
+                                Integer.toString(zoneId)
+                            ),
+                            VariableConstants.ON,
+                            c == '1'
+                        )
+                    );
                 } else if (c == 'X') {
                     if (devices.containsKey(zoneId)) {
                         unpublishDevice(Integer.toString(zoneId));
@@ -191,8 +209,8 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         }
     }
 
-    @Override
-    public void onSetDeviceVariable(String deviceId, String variableName, Object value) {
-        getDevice(deviceId).getRuntime().onSetVariable(variableName, value);
-    }
+//    @Override
+//    public void onSetDeviceVariable(String deviceId, String variableName, Object value) {
+//        getDevice(DeviceContext.create(getContext(), deviceId)).getRuntime().onSetVariable(variableName, value);
+//    }
 }

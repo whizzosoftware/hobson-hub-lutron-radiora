@@ -7,6 +7,8 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
+import com.whizzosoftware.hobson.api.config.Configuration;
+import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.device.AbstractHobsonDevice;
 import com.whizzosoftware.hobson.api.device.DeviceType;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
@@ -31,7 +33,7 @@ public class RadioRaDevice extends AbstractHobsonDevice {
     }
 
     @Override
-    public void onStartup() {
+    public void onStartup(Configuration config) {
         // publish an "on" variable
         publishVariable(VariableConstants.ON, startupValue, HobsonVariable.Mask.READ_WRITE);
         publishVariable(VariableConstants.LEVEL, null, HobsonVariable.Mask.WRITE_ONLY);
@@ -52,8 +54,13 @@ public class RadioRaDevice extends AbstractHobsonDevice {
     }
 
     @Override
+    protected ConfigurationPropertyMetaData[] createConfigurationPropertyMetaData() {
+        return null;
+    }
+
+    @Override
     public void onSetVariable(String name, Object value) {
-        int zoneId = Integer.parseInt(getId());
+        int zoneId = Integer.parseInt(getContext().getDeviceId());
 
         if (VariableConstants.ON.equals(name)) {
             Boolean val = getAsBoolean(value);
