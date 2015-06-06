@@ -7,10 +7,10 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
-import com.whizzosoftware.hobson.api.config.Configuration;
-import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.device.AbstractHobsonDevice;
 import com.whizzosoftware.hobson.api.device.DeviceType;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
+import com.whizzosoftware.hobson.api.property.TypedProperty;
 import com.whizzosoftware.hobson.api.variable.HobsonVariable;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import org.slf4j.Logger;
@@ -33,7 +33,9 @@ public class RadioRaDevice extends AbstractHobsonDevice {
     }
 
     @Override
-    public void onStartup(Configuration config) {
+    public void onStartup(PropertyContainer config) {
+        super.onStartup(config);
+
         // publish an "on" variable
         publishVariable(VariableConstants.ON, startupValue, HobsonVariable.Mask.READ_WRITE);
         publishVariable(VariableConstants.LEVEL, null, HobsonVariable.Mask.WRITE_ONLY);
@@ -54,7 +56,7 @@ public class RadioRaDevice extends AbstractHobsonDevice {
     }
 
     @Override
-    protected ConfigurationPropertyMetaData[] createConfigurationPropertyMetaData() {
+    protected TypedProperty[] createConfigurationPropertyMetaData() {
         return null;
     }
 

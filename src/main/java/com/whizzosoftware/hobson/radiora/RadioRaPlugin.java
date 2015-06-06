@@ -7,11 +7,11 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
-import com.whizzosoftware.hobson.api.config.ConfigurationPropertyMetaData;
 import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.channel.AbstractChannelObjectPlugin;
 import com.whizzosoftware.hobson.api.plugin.channel.ChannelIdleDetectionConfig;
+import com.whizzosoftware.hobson.api.property.TypedProperty;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.radiora.api.codec.RadioRaFrameDecoder;
@@ -41,8 +41,8 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     public RadioRaPlugin(String pluginId) {
         super(pluginId);
 
-        addConfigurationPropertyMetaData(new ConfigurationPropertyMetaData("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", ConfigurationPropertyMetaData.Type.STRING));
-        addConfigurationPropertyMetaData(new ConfigurationPropertyMetaData("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", ConfigurationPropertyMetaData.Type.STRING));
+        addSupportedProperty(new TypedProperty("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING));
+        addSupportedProperty(new TypedProperty("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING));
     }
 
     @Override
