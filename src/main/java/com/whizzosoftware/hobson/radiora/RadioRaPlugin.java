@@ -40,9 +40,6 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     public RadioRaPlugin(String pluginId) {
         super(pluginId);
-
-        addSupportedProperty(new TypedProperty("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING));
-        addSupportedProperty(new TypedProperty("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING));
     }
 
     @Override
@@ -207,5 +204,13 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                 zoneMapInquiryCount = 0;
             }
         }
+    }
+
+    @Override
+    protected TypedProperty[] createSupportedProperties() {
+        return new TypedProperty[] {
+            new TypedProperty("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING),
+            new TypedProperty("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING)
+        };
     }
 }
