@@ -30,13 +30,7 @@ public class RadioRaPluginTest {
         assertEquals(0, manager.getVariableUpdates().size());
         plugin.onZoneMap(new ZoneMap("01XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
         assertEquals(2, plugin.getDeviceCount());
-        assertEquals(2, manager.getVariableUpdates().size());
-        assertEquals("1", manager.getVariableUpdates().get(0).getDeviceId());
-        assertEquals(VariableConstants.ON, manager.getVariableUpdates().get(0).getName());
-        assertFalse((Boolean) manager.getVariableUpdates().get(0).getValue());
-        assertEquals("2", manager.getVariableUpdates().get(1).getDeviceId());
-        assertEquals(VariableConstants.ON, manager.getVariableUpdates().get(1).getName());
-        assertTrue((Boolean) manager.getVariableUpdates().get(1).getValue());
+        assertEquals(0, manager.getVariableUpdates().size());
 
         // send invalid zone map
         manager.clearVariableUpdates();
@@ -97,19 +91,14 @@ public class RadioRaPluginTest {
         plugin.onZoneMap(new ZoneMap("0XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
 
         assertEquals(1, plugin.getDeviceCount());
-        assertEquals(1, variableManager.getVariableUpdates().size());
-
-        VariableUpdate update = variableManager.getVariableUpdates().get(0);
-        assertEquals("1", update.getDeviceId());
-        assertEquals(VariableConstants.ON, update.getName());
-        assertFalse((boolean)update.getValue());
+        assertEquals(0, variableManager.getVariableUpdates().size());
 
         variableManager.clearVariableUpdates();
         assertEquals(0, variableManager.getVariableUpdates().size());
         plugin.onChannelDisconnected();
 
         assertEquals(1, variableManager.getVariableUpdates().size());
-        update = variableManager.getVariableUpdates().get(0);
+        VariableUpdate update = variableManager.getVariableUpdates().get(0);
         assertEquals("1", update.getDeviceId());
         assertEquals(VariableConstants.ON, update.getName());
         assertNull(update.getValue());

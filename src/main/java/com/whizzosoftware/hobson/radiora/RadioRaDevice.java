@@ -32,11 +32,15 @@ public class RadioRaDevice extends AbstractHobsonDevice {
         this.startupValue = startupValue;
     }
 
+    public void setStartupValue(boolean startupValue) {
+        this.startupValue = startupValue;
+    }
+
     @Override
     public void onStartup(PropertyContainer config) {
         super.onStartup(config);
 
-        // publish an "on" variable
+        // publish the appropriate variable
         publishVariable(VariableConstants.ON, startupValue, HobsonVariable.Mask.READ_WRITE);
         publishVariable(VariableConstants.LEVEL, null, HobsonVariable.Mask.WRITE_ONLY);
     }

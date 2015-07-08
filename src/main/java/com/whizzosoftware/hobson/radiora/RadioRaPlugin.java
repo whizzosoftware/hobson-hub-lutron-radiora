@@ -154,21 +154,34 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                 char c = state.charAt(i);
                 int zoneId = i + 1;
                 if (c == '1' || c == '0') {
-                    if (!devices.containsKey(zoneId)) {
-                        RadioRaDevice device = new RadioRaDevice(this, zoneId, c == '1');
+                    RadioRaDevice device = devices.get(zoneId);
+
+                    // if we haven't published this device before, do so
+                    if (device == null) {
+                        device = new RadioRaDevice(this, zoneId, c == '1');
                         publishDevice(device);
                         devices.put(zoneId, device);
+                    // otherwise, determine if we should publish a variable update
+                    } else {
+                        boolean value = (c == '1');
+
+                        // if the device has been started (and therefore it's variables have been published), send an update
+                        if (device.isStarted()) {
+                            updates.add(
+                                new VariableUpdate(
+                                    DeviceContext.create(
+                                        getContext(),
+                                        Integer.toString(zoneId)
+                                    ),
+                                    VariableConstants.ON,
+                                    value
+                                )
+                            );
+                        // otherwise, simply update its initial value so it will be published with the correct startup value
+                        } else {
+                            device.setStartupValue(value);
+                        }
                     }
-                    updates.add(
-                        new VariableUpdate(
-                            DeviceContext.create(
-                                getContext(),
-                                Integer.toString(zoneId)
-                            ),
-                            VariableConstants.ON,
-                            c == '1'
-                        )
-                    );
                 } else if (c == 'X') {
                     if (devices.containsKey(zoneId)) {
                         unpublishDevice(Integer.toString(zoneId));
