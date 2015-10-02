@@ -144,6 +144,8 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     protected void onZoneMap(ZoneMap zoneMap) {
         logger.debug("onZoneMap: {}", zoneMap);
 
+        long now = System.currentTimeMillis();
+
         zoneMapInquiryCount = 0;
 
         // a zone map should always be 32 characters long
@@ -182,6 +184,10 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                             device.setStartupValue(value);
                         }
                     }
+
+                    // flag device as checked in
+                    device.checkInDevice(now);
+
                 } else if (c == 'X') {
                     if (devices.containsKey(zoneId)) {
                         unpublishDevice(Integer.toString(zoneId));
