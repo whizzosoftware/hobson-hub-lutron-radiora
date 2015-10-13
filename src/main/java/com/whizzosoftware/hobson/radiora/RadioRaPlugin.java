@@ -34,9 +34,12 @@ import java.util.*;
 public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final static int IDLE_DETECTION_INTERVAL = 10;
+
     private final Map<Integer,RadioRaDevice> devices = new HashMap<>();
-    private final ChannelIdleDetectionConfig idleDetectionConfig = new ChannelIdleDetectionConfig(10, "!\r");
+    private final ChannelIdleDetectionConfig idleDetectionConfig = new ChannelIdleDetectionConfig(IDLE_DETECTION_INTERVAL, "!\r");
     private int zoneMapInquiryCount = 0;
+    private long lastCheckIn;
 
     public RadioRaPlugin(String pluginId) {
         super(pluginId);
@@ -184,10 +187,6 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                             device.setStartupValue(value);
                         }
                     }
-
-                    // flag device as checked in
-                    device.checkInDevice(now);
-
                 } else if (c == 'X') {
                     if (devices.containsKey(zoneId)) {
                         unpublishDevice(Integer.toString(zoneId));
@@ -221,6 +220,16 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
             } else {
                 logger.error("Giving up on zone inquiry requests; no response detected after 3 tries");
                 zoneMapInquiryCount = 0;
+            }
+        }
+
+        // if the channel is actively connected, perform check-in on all devices
+        if (isConnected()) {
+            long now = System.currentTimeMillis();
+            if (now - lastCheckIn > IDLE_DETECTION_INTERVAL) {
+                for (RadioRaDevice d : devices.values()) {
+                    d.checkInDevice(now);
+                }
             }
         }
     }
