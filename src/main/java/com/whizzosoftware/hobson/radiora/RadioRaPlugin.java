@@ -228,8 +228,8 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     @Override
     protected TypedProperty[] createSupportedProperties() {
         return new TypedProperty[] {
-            new TypedProperty("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING),
-            new TypedProperty("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING)
+            new TypedProperty.Builder("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING).build(),
+            new TypedProperty.Builder("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING).build()
         };
     }
 }
