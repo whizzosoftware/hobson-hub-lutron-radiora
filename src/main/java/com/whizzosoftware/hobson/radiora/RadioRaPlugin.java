@@ -47,7 +47,7 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     @Override
     public String getName() {
-        return "RadioRa Plugin";
+        return "Lutron RadioRa Plugin";
     }
 
     public int getDeviceCount() {
@@ -230,6 +230,7 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                 for (RadioRaDevice d : devices.values()) {
                     d.checkInDevice(now);
                 }
+                lastCheckIn = now;
             }
         }
     }
