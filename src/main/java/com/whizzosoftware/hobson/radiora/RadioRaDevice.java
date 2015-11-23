@@ -55,6 +55,16 @@ public class RadioRaDevice extends AbstractHobsonDevice {
     }
 
     @Override
+    public String getManufacturerName() {
+        return "Lutron";
+    }
+
+    @Override
+    public String getModelName() {
+        return "RadioRA";
+    }
+
+    @Override
     public String getPreferredVariableName() {
         return VariableConstants.ON;
     }
