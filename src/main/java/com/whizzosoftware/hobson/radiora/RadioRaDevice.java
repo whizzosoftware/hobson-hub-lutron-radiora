@@ -40,6 +40,8 @@ public class RadioRaDevice extends AbstractHobsonDevice {
     public void onStartup(PropertyContainer config) {
         super.onStartup(config);
 
+        logger.debug("Device {} is starting", getContext());
+
         // publish the appropriate variable
         publishVariable(VariableConstants.ON, startupValue, HobsonVariable.Mask.READ_WRITE);
         publishVariable(VariableConstants.LEVEL, null, HobsonVariable.Mask.WRITE_ONLY);

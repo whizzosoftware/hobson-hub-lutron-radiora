@@ -11,6 +11,7 @@ import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.channel.AbstractChannelObjectPlugin;
 import com.whizzosoftware.hobson.api.plugin.channel.ChannelIdleDetectionConfig;
+import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.property.TypedProperty;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
@@ -45,11 +46,21 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         super(pluginId);
     }
 
-    public void onShutdown() {
-        super.onShutdown();
+    @Override
+    public void onStartup(PropertyContainer config) {
+        super.onStartup(config);
+
+        logger.debug("RadioRa plugin has started");
     }
 
-        @Override
+    @Override
+    public void onShutdown() {
+        super.onShutdown();
+
+        logger.debug("RadioRa plugin has shut down");
+    }
+
+    @Override
     public String getName() {
         return "Lutron RadioRa Plugin";
     }
@@ -136,6 +147,7 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     protected void onLocalZoneChange(LocalZoneChange lzc) {
         logger.debug("onLocalZoneChange: {}", lzc);
+
         VariableUpdate update = new VariableUpdate(
             DeviceContext.create(
                     getContext(),
@@ -164,12 +176,16 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
                     // if we haven't published this device before, do so
                     if (device == null) {
+                        logger.debug("Found new zone {}", zoneId);
+
                         device = new RadioRaDevice(this, zoneId, c == '1');
                         publishDevice(device);
                         devices.put(zoneId, device);
                     // otherwise, determine if we should publish a variable update
                     } else {
                         boolean value = (c == '1');
+
+                        logger.debug("Found update for existing zone {}", zoneId);
 
                         // if the device has been started (and therefore it's variables have been published), send an update
                         if (device.isStarted()) {
