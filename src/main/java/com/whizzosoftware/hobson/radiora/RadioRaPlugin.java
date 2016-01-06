@@ -45,7 +45,11 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         super(pluginId);
     }
 
-    @Override
+    public void onShutdown() {
+        super.onShutdown();
+    }
+
+        @Override
     public String getName() {
         return "Lutron RadioRa Plugin";
     }
@@ -96,6 +100,13 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     @Override
     protected void onChannelConnected() {
         logger.debug("onChannelConnected()");
+
+        // flag any current devices as available
+        long now = System.currentTimeMillis();
+        for (HobsonDevice device : devices.values()) {
+            setDeviceAvailability(device.getContext(), true, now);
+        }
+
         sendZoneMapInquiry();
     }
 
@@ -115,20 +126,12 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     @Override
     protected void onChannelDisconnected() {
-        logger.info("onChannelDisconnected()");
+        logger.debug("onChannelDisconnected()");
 
-        List<VariableUpdate> updates = new ArrayList<>();
+        // flag all devices as unavailable
         for (HobsonDevice device : devices.values()) {
-            updates.add(
-                new VariableUpdate(
-                    device.getContext(),
-                    VariableConstants.ON,
-                    null
-                )
-            );
+            setDeviceAvailability(device.getContext(), false, null);
         }
-
-        fireVariableUpdateNotifications(updates);
     }
 
     protected void onLocalZoneChange(LocalZoneChange lzc) {
@@ -146,8 +149,6 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     protected void onZoneMap(ZoneMap zoneMap) {
         logger.debug("onZoneMap: {}", zoneMap);
-
-        long now = System.currentTimeMillis();
 
         zoneMapInquiryCount = 0;
 
@@ -228,7 +229,7 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
             long now = System.currentTimeMillis();
             if (now - lastCheckIn > IDLE_DETECTION_INTERVAL) {
                 for (RadioRaDevice d : devices.values()) {
-                    d.checkInDevice(now);
+                    d.setDeviceAvailability(true, now);
                 }
                 lastCheckIn = now;
             }

@@ -7,7 +7,9 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
+import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.device.MockDeviceManager;
+import com.whizzosoftware.hobson.api.hub.HubContext;
 import com.whizzosoftware.hobson.api.variable.MockVariableManager;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
@@ -77,7 +79,7 @@ public class RadioRaPluginTest {
     }
 
     @Test
-    public void testDisconnectVariableInvalidation() {
+    public void testDisconnectDeviceAvailability() {
         RadioRaPlugin plugin = new RadioRaPlugin("id");
         MockDeviceManager deviceManager = new MockDeviceManager();
         plugin.setDeviceManager(deviceManager);
@@ -94,21 +96,22 @@ public class RadioRaPluginTest {
         assertEquals(0, variableManager.getVariableUpdates().size());
 
         variableManager.clearVariableUpdates();
+
+        for (HobsonDevice d : deviceManager.getAllDevices(HubContext.createLocal())) {
+            assertTrue(deviceManager.isDeviceAvailable(d.getContext()));
+        }
         assertEquals(0, variableManager.getVariableUpdates().size());
         plugin.onChannelDisconnected();
+        for (HobsonDevice d : deviceManager.getAllDevices(HubContext.createLocal())) {
+            assertFalse(deviceManager.isDeviceAvailable(d.getContext()));
+        }
 
-        assertEquals(1, variableManager.getVariableUpdates().size());
-        VariableUpdate update = variableManager.getVariableUpdates().get(0);
-        assertEquals("1", update.getDeviceId());
-        assertEquals(VariableConstants.ON, update.getName());
-        assertNull(update.getValue());
-
-        variableManager.clearVariableUpdates();
-        assertEquals(0, variableManager.getVariableUpdates().size());
-
+        plugin.onChannelConnected();
         plugin.onZoneMap(new ZoneMap("1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
-
-        update = variableManager.getVariableUpdates().get(0);
+        for (HobsonDevice d : deviceManager.getAllDevices(HubContext.createLocal())) {
+            assertTrue(deviceManager.isDeviceAvailable(d.getContext()));
+        }
+        VariableUpdate update = variableManager.getVariableUpdates().get(0);
         assertEquals("1", update.getDeviceId());
         assertEquals(VariableConstants.ON, update.getName());
         assertTrue((boolean)update.getValue());
