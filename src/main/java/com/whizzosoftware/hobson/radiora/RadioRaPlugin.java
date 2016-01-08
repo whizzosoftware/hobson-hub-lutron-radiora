@@ -7,13 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
-import com.whizzosoftware.hobson.api.device.DeviceContext;
 import com.whizzosoftware.hobson.api.device.HobsonDevice;
 import com.whizzosoftware.hobson.api.plugin.channel.AbstractChannelObjectPlugin;
 import com.whizzosoftware.hobson.api.plugin.channel.ChannelIdleDetectionConfig;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.property.TypedProperty;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
+import com.whizzosoftware.hobson.api.variable.VariableContext;
 import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.radiora.api.codec.RadioRaFrameDecoder;
 import com.whizzosoftware.hobson.radiora.api.codec.RadioRaFrameEncoder;
@@ -149,11 +149,11 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         logger.debug("onLocalZoneChange: {}", lzc);
 
         VariableUpdate update = new VariableUpdate(
-            DeviceContext.create(
-                    getContext(),
-                    Integer.toString(lzc.getZoneNumber())
+            VariableContext.create(
+                getContext(),
+                Integer.toString(lzc.getZoneNumber()),
+                VariableConstants.ON
             ),
-            VariableConstants.ON,
             lzc.getState() != LocalZoneChange.State.OFF
         );
         fireVariableUpdateNotification(update);
@@ -191,11 +191,11 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
                         if (device.isStarted()) {
                             updates.add(
                                 new VariableUpdate(
-                                    DeviceContext.create(
+                                    VariableContext.create(
                                         getContext(),
-                                        Integer.toString(zoneId)
+                                        Integer.toString(zoneId),
+                                        VariableConstants.ON
                                     ),
-                                    VariableConstants.ON,
                                     value
                                 )
                             );
