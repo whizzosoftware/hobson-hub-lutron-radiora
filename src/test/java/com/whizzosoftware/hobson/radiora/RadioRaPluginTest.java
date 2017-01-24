@@ -7,12 +7,13 @@
  *******************************************************************************/
 package com.whizzosoftware.hobson.radiora;
 
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.device.HobsonDeviceDescriptor;
 import com.whizzosoftware.hobson.api.device.MockDeviceManager;
+import com.whizzosoftware.hobson.api.event.MockEventManager;
+import com.whizzosoftware.hobson.api.event.device.DeviceVariablesUpdateEvent;
 import com.whizzosoftware.hobson.api.hub.HubContext;
-import com.whizzosoftware.hobson.api.variable.MockVariableManager;
+import com.whizzosoftware.hobson.api.variable.DeviceVariableUpdate;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
-import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.radiora.api.command.LocalZoneChange;
 import com.whizzosoftware.hobson.radiora.api.command.ZoneMap;
 import org.junit.Test;
@@ -20,100 +21,106 @@ import static org.junit.Assert.*;
 
 public class RadioRaPluginTest {
     @Test
-    public void testOnZoneMap() {
-        RadioRaPlugin plugin = new RadioRaPlugin("id");
+    public void testOnZoneMap() throws Exception {
+        final RadioRaPlugin plugin = new RadioRaPlugin("id", "1.0", null);
         MockDeviceManager deviceManager = new MockDeviceManager();
+        MockEventManager eventManager = new MockEventManager();
         plugin.setDeviceManager(deviceManager);
-        MockVariableManager manager = new MockVariableManager();
-        plugin.setVariableManager(manager);
+        plugin.setEventManager(eventManager);
 
         // send valid zone map with two devices
-        assertEquals(0, plugin.getDeviceCount());
-        assertEquals(0, manager.getVariableUpdates().size());
-        plugin.onZoneMap(new ZoneMap("01XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
-        assertEquals(2, plugin.getDeviceCount());
-        assertEquals(0, manager.getVariableUpdates().size());
+        assertEquals(0, deviceManager.getPublishedDeviceCount(plugin.getContext()));
+        assertEquals(0, eventManager.getEventCount());
+        plugin.onZoneMap(new ZoneMap("01XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"), true);
+        assertEquals(2, deviceManager.getPublishedDeviceCount(plugin.getContext()));
+        assertEquals(4, eventManager.getEventCount());
+        eventManager.clearEvents();
+        assertEquals(0, eventManager.getEventCount());
 
         // send invalid zone map
-        manager.clearVariableUpdates();
+        eventManager.clearEvents();
         plugin.onZoneMap(new ZoneMap("01XXXXX"));
-        assertEquals(0, manager.getVariableUpdates().size());
+        assertEquals(0, eventManager.getEventCount());
 
         // send valid zone map with no devices
-        manager.clearVariableUpdates();
-        plugin.onZoneMap(new ZoneMap("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
-        assertEquals(0, manager.getVariableUpdates().size());
+        eventManager.clearEvents();
+        plugin.onZoneMap(new ZoneMap("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"), true);
+        assertEquals(0, eventManager.getEventCount());
 
         // verify that the devices were removed
-        assertEquals(0, plugin.getDeviceCount());
+        assertEquals(0, deviceManager.getPublishedDeviceCount(plugin.getContext()));
     }
 
     @Test
     public void testOnLocalZoneChange() {
-        RadioRaPlugin plugin = new RadioRaPlugin("id");
-        MockVariableManager manager = new MockVariableManager();
-        plugin.setVariableManager(manager);
+        MockDeviceManager deviceManager = new MockDeviceManager();
+        MockEventManager eventManager = new MockEventManager();
+        RadioRaPlugin plugin = new RadioRaPlugin("id", "1.0", null);
+        plugin.setDeviceManager(deviceManager);
+        plugin.setEventManager(eventManager);
 
-        assertEquals(0, manager.getVariableUpdates().size());
+        // force creation of zone 1 device
+        plugin.onZoneMap(new ZoneMap("1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"), true);
+        assertEquals(2, eventManager.getEventCount());
+        eventManager.clearEvents();
+        assertEquals(0, eventManager.getEventCount());
+
+        // send local zone change
         plugin.onLocalZoneChange(new LocalZoneChange(1, LocalZoneChange.State.ON));
-        assertEquals(1, manager.getVariableUpdates().size());
-        VariableUpdate vu = manager.getVariableUpdates().get(0);
+        assertEquals(1, eventManager.getEventCount());
+        DeviceVariablesUpdateEvent e = (DeviceVariablesUpdateEvent)eventManager.getEvent(0);
+        assertEquals(1, e.getUpdates().size());
+        DeviceVariableUpdate vu = e.getUpdates().get(0);
         assertEquals(VariableConstants.ON, vu.getName());
-        assertTrue((Boolean)vu.getValue());
+        assertTrue((Boolean)vu.getNewValue());
 
-        manager.clearVariableUpdates();
-        assertEquals(0, manager.getVariableUpdates().size());
+        eventManager.clearEvents();
+        assertEquals(0, eventManager.getEventCount());
         plugin.onLocalZoneChange(new LocalZoneChange(1, LocalZoneChange.State.OFF));
-        assertEquals(1, manager.getVariableUpdates().size());
-        vu = manager.getVariableUpdates().get(0);
+        assertEquals(1, eventManager.getEventCount());
+        e = (DeviceVariablesUpdateEvent)eventManager.getEvent(0);
+        vu = e.getUpdates().get(0);
         assertEquals(VariableConstants.ON, vu.getName());
-        assertFalse((Boolean) vu.getValue());
+        assertFalse((Boolean)vu.getNewValue());
 
-        manager.clearVariableUpdates();
-        assertEquals(0, manager.getVariableUpdates().size());
+        eventManager.clearEvents();
+        assertEquals(0, eventManager.getEventCount());
         plugin.onLocalZoneChange(new LocalZoneChange(1, LocalZoneChange.State.CHG));
-        assertEquals(1, manager.getVariableUpdates().size());
-        vu = manager.getVariableUpdates().get(0);
+        assertEquals(1, eventManager.getEventCount());
+        e = (DeviceVariablesUpdateEvent)eventManager.getEvent(0);
+        assertEquals(1, e.getUpdates().size());
+        vu = e.getUpdates().get(0);
         assertEquals(VariableConstants.ON, vu.getName());
-        assertTrue((Boolean) vu.getValue());
+        assertTrue((Boolean)vu.getNewValue());
     }
 
     @Test
     public void testDisconnectDeviceAvailability() {
-        RadioRaPlugin plugin = new RadioRaPlugin("id");
         MockDeviceManager deviceManager = new MockDeviceManager();
+        MockEventManager eventManager = new MockEventManager();
+        RadioRaPlugin plugin = new RadioRaPlugin("id", "1.0", null);
         plugin.setDeviceManager(deviceManager);
-        MockVariableManager variableManager = new MockVariableManager();
-        plugin.setVariableManager(variableManager);
+        plugin.setEventManager(eventManager);
 
         // send valid zone map with two devices
         assertEquals(0, plugin.getDeviceCount());
-        assertEquals(0, variableManager.getVariableUpdates().size());
 
-        plugin.onZoneMap(new ZoneMap("0XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
+        plugin.onZoneMap(new ZoneMap("0XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"), true);
 
         assertEquals(1, plugin.getDeviceCount());
-        assertEquals(0, variableManager.getVariableUpdates().size());
 
-        variableManager.clearVariableUpdates();
-
-        for (HobsonDevice d : deviceManager.getAllDevices(HubContext.createLocal())) {
+        for (HobsonDeviceDescriptor d : deviceManager.getDevices(HubContext.createLocal())) {
             assertTrue(deviceManager.isDeviceAvailable(d.getContext()));
         }
-        assertEquals(0, variableManager.getVariableUpdates().size());
         plugin.onChannelDisconnected();
-        for (HobsonDevice d : deviceManager.getAllDevices(HubContext.createLocal())) {
+        for (HobsonDeviceDescriptor d : deviceManager.getDevices(HubContext.createLocal())) {
             assertFalse(deviceManager.isDeviceAvailable(d.getContext()));
         }
 
         plugin.onChannelConnected();
-        plugin.onZoneMap(new ZoneMap("1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"));
-        for (HobsonDevice d : deviceManager.getAllDevices(HubContext.createLocal())) {
+        plugin.onZoneMap(new ZoneMap("1XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"), true);
+        for (HobsonDeviceDescriptor d : deviceManager.getDevices(HubContext.createLocal())) {
             assertTrue(deviceManager.isDeviceAvailable(d.getContext()));
         }
-        VariableUpdate update = variableManager.getVariableUpdates().get(0);
-        assertEquals("1", update.getDeviceId());
-        assertEquals(VariableConstants.ON, update.getName());
-        assertTrue((boolean)update.getValue());
     }
 }

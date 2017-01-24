@@ -1,20 +1,19 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2013 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.radiora;
 
-import com.whizzosoftware.hobson.api.device.HobsonDevice;
+import com.whizzosoftware.hobson.api.device.proxy.HobsonDeviceProxy;
 import com.whizzosoftware.hobson.api.plugin.channel.AbstractChannelObjectPlugin;
 import com.whizzosoftware.hobson.api.plugin.channel.ChannelIdleDetectionConfig;
 import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.property.TypedProperty;
-import com.whizzosoftware.hobson.api.variable.VariableConstants;
-import com.whizzosoftware.hobson.api.variable.VariableContext;
-import com.whizzosoftware.hobson.api.variable.VariableUpdate;
 import com.whizzosoftware.hobson.radiora.api.codec.RadioRaFrameDecoder;
 import com.whizzosoftware.hobson.radiora.api.codec.RadioRaFrameEncoder;
 import com.whizzosoftware.hobson.radiora.api.command.*;
@@ -24,8 +23,6 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.rxtx.RxtxChannelConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 /**
  * A Hobson driver that controls a Lutron RadioRa system via a RA-RS232 interface.
@@ -37,13 +34,12 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
     private final static int IDLE_DETECTION_INTERVAL = 10;
 
-    private final Map<Integer,RadioRaDevice> devices = new HashMap<>();
     private final ChannelIdleDetectionConfig idleDetectionConfig = new ChannelIdleDetectionConfig(IDLE_DETECTION_INTERVAL, "!\r");
     private int zoneMapInquiryCount = 0;
     private long lastCheckIn;
 
-    public RadioRaPlugin(String pluginId) {
-        super(pluginId);
+    public RadioRaPlugin(String pluginId, String version, String description) {
+        super(pluginId, version, description);
     }
 
     @Override
@@ -65,20 +61,20 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         return "Lutron RadioRa Plugin";
     }
 
-    public int getDeviceCount() {
-        return devices.size();
+    int getDeviceCount() {
+        return getDeviceProxies().size();
     }
 
-    public void sendZoneMapInquiry() {
+    private void sendZoneMapInquiry() {
         zoneMapInquiryCount = 1;
         send(new ZoneMapInquiry());
     }
 
-    public void setSwitchLevel(int zoneNum, boolean isOn) {
+    void setSwitchLevel(int zoneNum, boolean isOn) {
         send(new SetSwitchLevel(zoneNum, isOn));
     }
 
-    public void setDimmerLevel(int zoneNum, int level) {
+    void setDimmerLevel(int zoneNum, int level) {
         send(new SetDimmerLevel(zoneNum, level));
     }
 
@@ -114,8 +110,8 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
 
         // flag any current devices as available
         long now = System.currentTimeMillis();
-        for (HobsonDevice device : devices.values()) {
-            setDeviceAvailability(device.getContext(), true, now);
+        for (HobsonDeviceProxy device : getDeviceProxies()) {
+            device.setLastCheckin(now);
         }
 
         sendZoneMapInquiry();
@@ -140,26 +136,26 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         logger.debug("onChannelDisconnected()");
 
         // flag all devices as unavailable
-        for (HobsonDevice device : devices.values()) {
-            setDeviceAvailability(device.getContext(), false, null);
+        for (HobsonDeviceProxy device : getDeviceProxies()) {
+            device.setLastCheckin(null);
         }
     }
 
-    protected void onLocalZoneChange(LocalZoneChange lzc) {
+    void onLocalZoneChange(LocalZoneChange lzc) {
         logger.debug("onLocalZoneChange: {}", lzc);
-
-        VariableUpdate update = new VariableUpdate(
-            VariableContext.create(
-                getContext(),
-                Integer.toString(lzc.getZoneNumber()),
-                VariableConstants.ON
-            ),
-            lzc.getState() != LocalZoneChange.State.OFF
-        );
-        fireVariableUpdateNotification(update);
+        String deviceId = Integer.toString(lzc.getZoneNumber());
+        if (hasDeviceProxy(deviceId)) {
+            RadioRaDevice proxy = (RadioRaDevice) getDeviceProxy(Integer.toString(lzc.getZoneNumber()));
+            proxy.onZoneUpdate(lzc.getState() != LocalZoneChange.State.OFF);
+        }
     }
 
-    protected void onZoneMap(ZoneMap zoneMap) {
+    void onZoneMap(ZoneMap zoneMap) {
+        onZoneMap(zoneMap, false);
+    }
+
+    void onZoneMap(ZoneMap zoneMap, boolean sync) {
+        long start = System.currentTimeMillis();
         logger.debug("onZoneMap: {}", zoneMap);
 
         zoneMapInquiryCount = 0;
@@ -167,57 +163,40 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         // a zone map should always be 32 characters long
         String state = zoneMap.getZoneMap();
         if (state != null && state.length() == 32) {
-            List<VariableUpdate> updates = new ArrayList<>();
             for (int i = 0; i < 32; i++) {
                 char c = state.charAt(i);
                 int zoneId = i + 1;
                 if (c == '1' || c == '0') {
-                    RadioRaDevice device = devices.get(zoneId);
-
+                    String deviceId = Integer.toString(zoneId);
                     // if we haven't published this device before, do so
-                    if (device == null) {
+                    if (!hasDeviceProxy(deviceId)) {
                         logger.debug("Found new zone {}", zoneId);
-
-                        device = new RadioRaDevice(this, zoneId, c == '1');
-                        publishDevice(device);
-                        devices.put(zoneId, device);
-                    // otherwise, determine if we should publish a variable update
-                    } else {
-                        boolean value = (c == '1');
-
-                        logger.debug("Found update for existing zone {}", zoneId);
-
-                        // if the device has been started (and therefore it's variables have been published), send an update
-                        if (device.isStarted()) {
-                            updates.add(
-                                new VariableUpdate(
-                                    VariableContext.create(
-                                        getContext(),
-                                        Integer.toString(zoneId),
-                                        VariableConstants.ON
-                                    ),
-                                    value
-                                )
-                            );
-                        // otherwise, simply update its initial value so it will be published with the correct startup value
+                        RadioRaDevice device = new RadioRaDevice(this, zoneId, c == '1');
+                        if (sync) {
+                            publishDeviceProxy(device).syncUninterruptibly();
                         } else {
-                            device.setStartupValue(value);
+                            publishDeviceProxy(device);
                         }
+                        device.setLastCheckin(System.currentTimeMillis());
+                    // otherwise, provide the device its new value
+                    } else {
+                        RadioRaDevice device = (RadioRaDevice)getDeviceProxy(deviceId);
+                        boolean value = (c == '1');
+                        logger.debug("Found update for existing zone {}", zoneId);
+                        device.onZoneUpdate(value);
                     }
                 } else if (c == 'X') {
-                    if (devices.containsKey(zoneId)) {
-                        unpublishDevice(Integer.toString(zoneId));
-                        devices.remove(zoneId);
-                    }
+                    deleteDeviceProxy(Integer.toString(zoneId));
                 }
             }
-            fireVariableUpdateNotifications(updates);
         } else {
             logger.error("Received invalid zone map: {}", state);
         }
+
+        logger.error("onZoneMap processing took {} ms", System.currentTimeMillis() - start);
     }
 
-    protected void onLEDMap(LEDMap o) {
+    private void onLEDMap(LEDMap o) {
         logger.debug("onLEDMap: {}", o);
     }
 
@@ -244,8 +223,8 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         if (isConnected()) {
             long now = System.currentTimeMillis();
             if (now - lastCheckIn > IDLE_DETECTION_INTERVAL) {
-                for (RadioRaDevice d : devices.values()) {
-                    d.setDeviceAvailability(true, now);
+                for (HobsonDeviceProxy d : getDeviceProxies()) {
+                    d.setLastCheckin(now);
                 }
                 lastCheckIn = now;
             }
@@ -253,10 +232,10 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
     }
 
     @Override
-    protected TypedProperty[] createSupportedProperties() {
+    protected TypedProperty[] getConfigurationPropertyTypes() {
         return new TypedProperty[] {
-            new TypedProperty.Builder("serial.port", "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING).build(),
-            new TypedProperty.Builder("serial.hostname", "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING).build()
+            new TypedProperty.Builder(PROP_SERIAL_PORT, "Serial Port", "The serial port that the Lutron RA-RS232 controller is connected to (should not be used with Serial Hostname)", TypedProperty.Type.STRING).build(),
+            new TypedProperty.Builder(PROP_SERIAL_HOSTNAME, "Serial Hostname", "The hostname of the GlobalCache device that the Lutron RA-RS232 controller is connected to (should not be used with Serial Port)", TypedProperty.Type.STRING).build()
         };
     }
 }
