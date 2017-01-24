@@ -11,7 +11,6 @@ package com.whizzosoftware.hobson.radiora;
 
 import com.whizzosoftware.hobson.api.device.DeviceType;
 import com.whizzosoftware.hobson.api.device.proxy.AbstractHobsonDeviceProxy;
-import com.whizzosoftware.hobson.api.property.PropertyContainer;
 import com.whizzosoftware.hobson.api.property.TypedProperty;
 import com.whizzosoftware.hobson.api.variable.VariableConstants;
 import com.whizzosoftware.hobson.api.variable.VariableMask;
@@ -36,7 +35,7 @@ public class RadioRaDevice extends AbstractHobsonDeviceProxy {
     }
 
     @Override
-    public void onStartup(String name, PropertyContainer config) {
+    public void onStartup(String name, Map<String,Object> config) {
         logger.debug("Device {} is starting", getContext());
 
         // publish the appropriate variable
@@ -72,7 +71,7 @@ public class RadioRaDevice extends AbstractHobsonDeviceProxy {
     }
 
     @Override
-    public void onDeviceConfigurationUpdate(PropertyContainer config) {
+    public void onDeviceConfigurationUpdate(Map<String,Object> config) {
 
     }
 
