@@ -192,8 +192,6 @@ public class RadioRaPlugin extends AbstractChannelObjectPlugin {
         } else {
             logger.error("Received invalid zone map: {}", state);
         }
-
-        logger.error("onZoneMap processing took {} ms", System.currentTimeMillis() - start);
     }
 
     private void onLEDMap(LEDMap o) {
