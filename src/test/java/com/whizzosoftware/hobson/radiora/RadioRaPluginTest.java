@@ -1,10 +1,12 @@
-/*******************************************************************************
+/*
+ *******************************************************************************
  * Copyright (c) 2013 Whizzo Software, LLC.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
+ *******************************************************************************
+*/
 package com.whizzosoftware.hobson.radiora;
 
 import com.whizzosoftware.hobson.api.device.HobsonDeviceDescriptor;
@@ -70,7 +72,7 @@ public class RadioRaPluginTest {
         assertEquals(1, eventManager.getEventCount());
         DeviceVariablesUpdateEvent e = (DeviceVariablesUpdateEvent)eventManager.getEvent(0);
         assertEquals(1, e.getUpdates().size());
-        DeviceVariableUpdate vu = e.getUpdates().get(0);
+        DeviceVariableUpdate vu = e.getUpdates().iterator().next();
         assertEquals(VariableConstants.ON, vu.getName());
         assertTrue((Boolean)vu.getNewValue());
 
@@ -79,7 +81,7 @@ public class RadioRaPluginTest {
         plugin.onLocalZoneChange(new LocalZoneChange(1, LocalZoneChange.State.OFF));
         assertEquals(1, eventManager.getEventCount());
         e = (DeviceVariablesUpdateEvent)eventManager.getEvent(0);
-        vu = e.getUpdates().get(0);
+        vu = e.getUpdates().iterator().next();
         assertEquals(VariableConstants.ON, vu.getName());
         assertFalse((Boolean)vu.getNewValue());
 
@@ -89,7 +91,7 @@ public class RadioRaPluginTest {
         assertEquals(1, eventManager.getEventCount());
         e = (DeviceVariablesUpdateEvent)eventManager.getEvent(0);
         assertEquals(1, e.getUpdates().size());
-        vu = e.getUpdates().get(0);
+        vu = e.getUpdates().iterator().next();
         assertEquals(VariableConstants.ON, vu.getName());
         assertTrue((Boolean)vu.getNewValue());
     }
